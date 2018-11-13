@@ -9,7 +9,7 @@
 // publicTest method can be run on it.
 //
 // The publicTest method will always have access to variable x and function add()
-// because of closure. 
+// because of closure.
 var budgetController = (function() {
 
     var x = 23;
@@ -20,8 +20,31 @@ var budgetController = (function() {
 
     return {
         publicTest: function(b) {
-          console.log(add(b));
+          return add(b);
         }
     }
 
 })();
+
+var UIController = (function() {
+
+    // some code
+
+})();
+
+// Best practice to pass budgetController and UIController into controller
+// rather than just access them in the global scope. Why? If the names of these
+// object.methods changes, you only need to change the name of the argument passed
+// into controller rather than the (potentially multiple) uses of it in the
+// controller object.
+var controller = (function(budgetCtrl, UICtrl) {
+
+    var z = budgetCtrl.publicTest(30);
+
+    return {
+      anotherPublicMethod: function() {
+        console.log(z);
+      }
+    }
+
+})(budgetController, UIController);
