@@ -1,10 +1,32 @@
 // BUDGET CONTROLLER
 var budgetController = (function() {
 
-    // some code
+    // A function constructor. We use this because there will be lots of expenses.
+    // Creating a new Expense object example: var exp = new Expense(1, test, 100);
+    var Expense = function(id, description, value) {
+      this.id = id;
+      this.description = description;
+      this.value = value;
+    };
+
+    var Income = function(id, description, value) {
+      this.id = id;
+      this.description = description;
+      this.value = value;
+    };
+
+    var data = {
+      items: {
+        exp: [],
+        inc: []
+      },
+      totals: {
+        exp: 0,
+        inc: 0
+      }
+    }
 
 })();
-
 
 // UI CONTROLLER
 var UIController = (function() {
