@@ -9,19 +9,43 @@ var budgetController = (function() {
 // UI CONTROLLER
 var UIController = (function() {
 
-    // some code
+  // Means you only have to make one code change if a CSS selector changes
+  var DOMSelectors = {
+    inputType: '.add__type',
+    inputDescription: '.add__description',
+    inputValue: '.add__value',
+    inputBtn: '.add__btn'
+  }
 
+  return {
+    getInput: function() {
+      return {
+        type: document.querySelector(DOMSelectors.inputType).value, // will be either inc(ome) or exp(ense)
+        description: document.querySelector(DOMSelectors.inputDescription).value,
+        value: document.querySelector(DOMSelectors.inputValue).value
+      };
+    },
+
+    getDOMSelectors: function() {
+      return DOMSelectors;
+    }
+  }
 })();
 
 
 // GLOBAL APP CONTROLLER
 var controller = (function(budgetCtrl, UICtrl) {
 
+  var DOM = UICtrl.getDOMSelectors();
+  console.log(DOM);
+
   var ctrlAddItem = function() {
 
     // 1. Get the field input data
+    var input = UICtrl.getInput();
+    console.log(input);
 
-    // 2. Add the item to the bidget controller
+    // 2. Add the item to the budget controller
 
     // 3. Add the item to the UI
 
@@ -29,19 +53,15 @@ var controller = (function(budgetCtrl, UICtrl) {
 
     // 5. Display the budget on the UI
 
-    console.log('It works');
   }
 
-  document.querySelector(".add__btn").addEventListener('click', ctrlAddItem);
+  document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
 
   document.addEventListener('keypress', function(event) {
-
-    // If the enter key is pressed
+    // If the Enter key is pressed
     if (event.keycode === 13 || event.which === 13) {
       ctrlAddItem();
     }
-
-
   });
 
 })(budgetController, UIController);
