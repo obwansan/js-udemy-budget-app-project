@@ -16,6 +16,15 @@ var budgetController = (function() {
       this.value = value;
     };
 
+    var calculateTotal = function(type) {
+      var sum = 0;
+      data.items[type].forEach(function(obj) {
+        sum += obj.value;
+      });
+      data.totals[type] = sum;
+    };
+
+    // -1 is a way of saying pecentage doesn't exist yet
     var data = {
       items: {
         exp: [],
@@ -24,7 +33,9 @@ var budgetController = (function() {
       totals: {
         exp: 0,
         inc: 0
-      }
+      },
+      budget: 0,
+      percentage: -1
     }
 
     // The budgetController function returns this object when the app 
@@ -58,6 +69,31 @@ var budgetController = (function() {
         return newItem;
       },
 
+      calculateBudget: function() {
+        // calculate total income and expenses
+        calculateTotal('exp');
+        calculateTotal('inc');
+
+        // calculate the budget: income - expenses
+        data.budget = data.totals.inc - data.totals.exp;
+
+        // calculate the percentage of income that we spent
+        if(data.totals.inc > 0) {
+            data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+        } else {
+            data.percentage = -1;
+        }
+      },
+
+      getBudget: function() {
+        return {
+          budget: data.budget,
+          totalInc: data.totals.inc,
+          totalExp: data.totals.exp,
+          percentage: data.percentage
+        }
+      },
+
       testing: function() {
         console.log(data);
       }
@@ -83,7 +119,7 @@ var UIController = (function() {
       return {
         type: document.querySelector(DOMSelectors.inputType).value, // will be either inc(ome) or exp(ense)
         description: document.querySelector(DOMSelectors.inputDescription).value,
-        value: document.querySelector(DOMSelectors.inputValue).value
+        value: parseFloat(document.querySelector(DOMSelectors.inputValue).value)
       };
     },
 
@@ -122,7 +158,7 @@ var UIController = (function() {
       fieldsArr.forEach(function(currentEl) {
         currentEl.value = '';
       });
-      
+
       // Move focus back to the description field after entering an item
       fieldsArr[0].focus();
 
@@ -150,25 +186,38 @@ var controller = (function(budgetCtrl, UICtrl) {
     });
   };
 
-  // This function runs when the user clicks the add button or presses the enter key
+  var updateBuget = function() {
+    // 1. Calculate the budget
+    budgetCtrl.calculateBudget();
+
+    // 2. Return the budget
+    var budget = budgetCtrl.getBudget();
+
+    // 3. Display the budget on the UI
+    console.log(budget);
+  };
+
+  // This function runs whenever the user clicks the add button or presses the enter key
   var ctrlAddItem = function() {
     var input, newItem;
 
     // 1. Get the field input data
     input = UICtrl.getInput();
 
-    // 2. Add the item to the budget controller data object and assign it to newItem
-    newItem = budgetCtrl.addItem(input.type, input.description, input.value);
+    // Only add a new item to the UI if there's a description and valid value
+    if (input.description !== '' && !isNaN(input.value) && input.value > 0) {
+      // 2. Add the item to the budget controller data object and return it
+      newItem = budgetCtrl.addItem(input.type, input.description, input.value);
 
-    // 3. Add the item to the UI
-    UICtrl.addListItem(newItem, input.type);
+      // 3. Add the item to the UI
+      UICtrl.addListItem(newItem, input.type);
 
-    // 4. Clear the fields
-    UICtrl.clearFields();
+      // 4. Clear the fields
+      UICtrl.clearFields();
 
-    // 5. Calculate the budget
-
-    // 6. Display the budget on the UI
+      // 5. Calculate and update budget
+      updateBuget();
+    }
 
   };
   return {
