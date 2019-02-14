@@ -56,7 +56,8 @@ var budgetController = (function() {
           ID = 0;
         }
         
-        // Create new item based on 'inc' or 'exp' type
+        // Create new item based on 'inc' or 'exp' type.
+        // Pass it the actual ID (an argument) and parameters for description and placeholder.
         if (type === 'exp') {
           newItem = new Expense(ID, des, val);
         } else if (type === 'inc') {
@@ -115,7 +116,8 @@ var UIController = (function() {
     budgetLabel: '.budget__value',
     incomeLabel: '.budget__income--value',
     expensesLabel: '.budget__expenses--value',
-    percentageLabel: '.budget__expenses--percentage'
+    percentageLabel: '.budget__expenses--percentage',
+    container: '.container'
   }
 
   return {
@@ -134,11 +136,11 @@ var UIController = (function() {
       if (type === 'inc') {
           element = DOMSelectors.incomeContainer;
 
-          html = '<div class="item clearfix" id="income-%id%"> <div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div>';
+          html = '<div class="item clearfix" id="inc-%id%"> <div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div>';
       } else if (type === 'exp') {
           element = DOMSelectors.expensesContainer;
 
-          html = '<div class="item clearfix" id="expense-%0%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+          html = '<div class="item clearfix" id="exp-%0%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
       }
 
       // Replace placeholder text with actual data
@@ -193,13 +195,19 @@ var controller = (function(budgetCtrl, UICtrl) {
 
   var setupEventListeners = function() {
     var DOM = UICtrl.getDOMSelectors();
+
     document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
+
+    // The callback function passed to a event listener always has access to the event object
+    // via the parameter passed to it. Can call it anything, but usually 'event', 'ev' or 'e'.
     document.addEventListener('keypress', function(event) {
       // If the Enter key is pressed
       if (event.keycode === 13 || event.which === 13) {
         ctrlAddItem();
       }
     });
+
+    document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
   };
 
   var updateBuget = function() {
@@ -234,6 +242,31 @@ var controller = (function(budgetCtrl, UICtrl) {
     }
 
   };
+
+  // The callback function passed to a event listener always has access to the event object
+  // via the parameter passed to it. Can call it anything, but usually 'event', 'ev' or 'e'.
+  var ctrlDeleteItem = function(event) {
+    var itemID, splitID, type, ID;
+
+    itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+    if (itemID) {
+
+      // inc-1
+      splitID = itemID.split('-');
+      type = splitID[0];
+      ID = splitID[1];
+
+      // 1. Delete the item from the data structure
+
+      // 2. Delete the item from the UI
+
+      // 3. Update and show the new budget
+
+
+    }
+  }
+
   return {
     init: function() {
       console.log('Application has started');
