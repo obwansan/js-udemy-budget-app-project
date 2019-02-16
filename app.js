@@ -16,14 +16,6 @@ var budgetController = (function() {
       this.value = value;
     };
 
-    var calculateTotal = function(type) {
-      var sum = 0;
-      data.items[type].forEach(function(obj) {
-        sum += obj.value;
-      });
-      data.totals[type] = sum;
-    };
-
     // -1 is a way of saying pecentage doesn't exist yet
     var data = {
       items: {
@@ -46,7 +38,7 @@ var budgetController = (function() {
 
         // Create new ID
         // Can use bracket object access notation because the argument 
-        // type uses the same term as the items object property.
+        // type uses the same term ('exp' or 'inc') as the items object property.
         // The 'inc' and 'exp' arrays hold Expense and Income objects, respectively.
         // So here we're accessing the id property of the last object in the array
         // and adding 1 to create the ID of the next object to be added to the array.
@@ -70,19 +62,58 @@ var budgetController = (function() {
         return newItem;
       },
 
+      // My version
+      deleteItem: function(type, ID) {
+        data.items[type].forEach(function(obj, index) {
+          // If the ID of the budget item (DOM node / div) you are deleting is the 
+          // same as the id of a previously added budget item (object) in the data.items[type] array,
+          if (obj.id === ID) {
+            // remove it
+            data.items[type].splice(index, 1);
+          }
+        });
+      },
+
+      // Jonas' version
+      // deleteItem: function(type, ID) {
+      //   var ids, index;
+
+      //   // Get an array of the budget object ids
+      //   ids = data.items[type].map(function(current) {
+      //     return current.id;
+      //   });
+      //   // Get the index of the container parentNode div that has the 
+      //   // event listener (see ctrlDleteItem() )
+      //   index = ids.indexOf(ID);
+
+      //   // If the index (and therefore the container parentNode div) is in the array
+      //   if (index !== -1) {
+      //     // remove it
+      //     data.items[type].splice(index, 1);
+      //   }
+      // },
+
+      calculateTotal: function(type) {
+        var sum = 0;
+        data.items[type].forEach(function(obj) {
+          sum += obj.value;
+        });
+        data.totals[type] = sum;
+      },
+
       calculateBudget: function() {
         // calculate total income and expenses
-        calculateTotal('exp');
-        calculateTotal('inc');
+        this.calculateTotal('exp');
+        this.calculateTotal('inc');
 
         // calculate the budget: income - expenses
         data.budget = data.totals.inc - data.totals.exp;
 
         // calculate the percentage of income that we spent
         if(data.totals.inc > 0) {
-            data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+          data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
         } else {
-            data.percentage = -1;
+          data.percentage = -1;
         }
       },
 
@@ -120,6 +151,8 @@ var UIController = (function() {
     container: '.container'
   }
 
+  // The budgetController function returns this object when the app 
+  // loads/reloads because its an IIFE.
   return {
     getInput: function() {
       return {
@@ -207,6 +240,10 @@ var controller = (function(budgetCtrl, UICtrl) {
       }
     });
 
+    // The click event bubbles up from the event target (the delete button) to the element
+    // that is parent to all income or expense divs (i.e. DOM.container). So don't have to put 
+    // an event listener on every income / expense div (maybe you can't anyway if they're 
+    // generated dynamically?)
     document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
   };
 
@@ -220,6 +257,7 @@ var controller = (function(budgetCtrl, UICtrl) {
   };
 
   // This function runs whenever the user clicks the add button or presses the enter key
+  // (as long as it's passed to an event listener!)
   var ctrlAddItem = function() {
     var input, newItem;
 
@@ -240,7 +278,6 @@ var controller = (function(budgetCtrl, UICtrl) {
       // 5. Calculate and update budget
       updateBuget();
     }
-
   };
 
   // The callback function passed to a event listener always has access to the event object
@@ -248,16 +285,18 @@ var controller = (function(budgetCtrl, UICtrl) {
   var ctrlDeleteItem = function(event) {
     var itemID, splitID, type, ID;
 
+    // Get the CSS #id of the required parent node (the div that contains all the HTML for an
+    // expense or income item.)
     itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
 
     if (itemID) {
-
       // inc-1
       splitID = itemID.split('-');
-      type = splitID[0];
-      ID = splitID[1];
+      type = splitID[0]; // e.g. inc
+      ID = parseInt(splitID[1]); // e.g. 1
 
       // 1. Delete the item from the data structure
+      budgetCtrl.deleteItem(type, ID);
 
       // 2. Delete the item from the UI
 
@@ -265,7 +304,7 @@ var controller = (function(budgetCtrl, UICtrl) {
 
 
     }
-  }
+  };
 
   return {
     init: function() {
