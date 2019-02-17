@@ -8,6 +8,21 @@ var budgetController = (function() {
       this.id = id;
       this.description = description;
       this.value = value;
+      this.percentage = -1;
+    };
+
+    // Adds the calcPercentage method to all instances of the Expense object
+    Expense.prototype.calcPercentage = function(totalIncome) {
+      if (totalIncome > 0) {
+          this.percentage = Math.round((this.value / totalIncome) * 100);
+      } else {
+          this.percentage = -1;
+      }
+    };
+
+    // Adds the getPercentage method to all instances of the Expense object
+    Expense.prototype.getPercentage = function() {
+      return this.percentage;
     };
 
     var Income = function(id, description, value) {
@@ -117,6 +132,23 @@ var budgetController = (function() {
         }
       },
 
+      calculatePercentages: function() {
+        data.items.exp.forEach(function(expObj) {
+          // Calling the calcPercentage method that was added to the Expense object prototype.
+          // calcPercentage calculates the percentage and adds it to the objects percentage property.
+          expObj.calcPercentage(data.totals.inc);
+        })
+      },
+
+      getPercentages: function() {
+        // The return keyword doesn't break out of the loop, it adds it to the new array that
+        // the map function returns.
+        var allPercentages = data.items.exp.map(function(expObj) {
+          return expObj.getPercentage();
+        });
+        return allPercentages;
+      },
+
       getBudget: function() {
         return {
           budget: data.budget,
@@ -148,7 +180,8 @@ var UIController = (function() {
     incomeLabel: '.budget__income--value',
     expensesLabel: '.budget__expenses--value',
     percentageLabel: '.budget__expenses--percentage',
-    container: '.container'
+    container: '.container',
+    expensesPercLabel: '.item__percentage'
   }
 
   // The budgetController function returns this object when the app 
@@ -220,6 +253,31 @@ var UIController = (function() {
       }
     },
 
+    // The percentages argument passed in here is the array of percentages (from each exp/inc object) 
+    // returned by the getPercentages function.
+    displayPercentages: function(percentages) {
+
+      // Returns a DOM node list (all DOM nodes / HTML elements with the class .item__percentage)
+      var fields = document.querySelectorAll(DOMSelectors.expensesPercLabel);
+
+      // Create a forEach function for node lists
+      var nodeListForEach = function(list, callback) {
+        for (var i = 0; i < list.length; i++) {
+          callback(list[i], i);
+        }
+      };
+
+      nodeListForEach(fields, function(current, index) {
+        if (percentages[index] > 0) {
+          current.textContent = percentages[index] + '%';
+        } else {
+          current.textContent = '---';
+        }
+      });
+    },
+
+    
+
     // Public 'getter' function (method)
     getDOMSelectors: function() {
       return DOMSelectors;
@@ -261,6 +319,18 @@ var controller = (function(budgetCtrl, UICtrl) {
     UICtrl.displayBudget(budget);
   };
 
+  var updatePercentages = function() {
+
+    // Calculate percentages
+    budgetCtrl.calculatePercentages();
+
+    // Read percentages from the budget controller
+    var percentages = budgetCtrl.getPercentages();
+
+    // Update the UI with the new percentages
+    UICtrl.displayPercentages(percentages);
+  };
+
   // This function runs whenever the user clicks the add button or presses the enter key
   // (as long as it's passed to an event listener!)
   var ctrlAddItem = function() {
@@ -282,6 +352,9 @@ var controller = (function(budgetCtrl, UICtrl) {
 
       // 5. Calculate and update budget
       updateBuget();
+
+      // 6. Calculate and update percentages
+      updatePercentages();
     }
   };
 
@@ -308,6 +381,9 @@ var controller = (function(budgetCtrl, UICtrl) {
 
       // 3. Update and show the new budget
       updateBuget();
+
+      // 4. Calculate and update percentages
+      updatePercentages();
     }
   };
 
