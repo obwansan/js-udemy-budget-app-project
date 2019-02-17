@@ -184,8 +184,26 @@ var UIController = (function() {
     expensesPercLabel: '.item__percentage'
   }
 
-  // The budgetController function returns this object when the app 
-  // loads/reloads because its an IIFE.
+  var formatNumber = function(num, type) {
+    var numSplit, int, dec;
+    // Makes negative numbers positive
+    num = Math.abs(num);
+    // toFixed is a method on the JS number prototype. Calling it on a number variable 
+    // automatically wraps the number primitive in a number object that has the method.
+    num = num.toFixed(2);
+    // Split the number into array on the decimal. Can split it because, bizarrely, .toFixed returns a string!
+    numSplit = num.split('.');
+    int = numSplit[0];
+    if (int.length > 3) {
+      int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, 3); // input 2310 outputs 2,310
+    }
+    dec = numSplit[1];
+    return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
+  };
+
+  // The budgetController function returns this object when the app loads/reloads because its an IIFE.
+  // The return object contains public methods that can be accessed outside the controller. The functions,
+  // varibles and objects that aren't returned are private (can't be accessed except by a getter function).
   return {
     getInput: function() {
       return {
@@ -212,7 +230,7 @@ var UIController = (function() {
       // Replace placeholder text with actual data
       newHtml = html.replace('%id%', obj.id);
       newHtml = newHtml.replace('%description%', obj.description);
-      newHtml = newHtml.replace('%value%', obj.value);
+      newHtml = newHtml.replace('%value%', formatNumber(obj.value, type));
 
       // Insert the html into the DOM
       document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
@@ -240,11 +258,18 @@ var UIController = (function() {
       fieldsArr[0].focus();
 
     },
-
+    // Displays the main figures in the center of the page
     displayBudget: function(obj) {
-      document.querySelector(DOMSelectors.budgetLabel).textContent = obj.budget;
-      document.querySelector(DOMSelectors.incomeLabel).textContent = obj.totalInc;
-      document.querySelector(DOMSelectors.expensesLabel).textContent = obj.totalExp;
+      var type;
+      // The obj parameter is passed the budget variable, which holds an object containing the budget
+      // property (see the updateBudget function in the global app controller). This 'budget' value is 
+      // really the income left after expenses, so if it's greater than 0 the prefix should be a + and 
+      // vica versa. 
+      obj.budget > 0 ? type = 'inc' : type = 'exp';
+
+      document.querySelector(DOMSelectors.budgetLabel).textContent = formatNumber(obj.budget, type);
+      document.querySelector(DOMSelectors.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
+      document.querySelector(DOMSelectors.expensesLabel).textContent = formatNumber(obj.totalExp, 'exp');
       
       if(obj.percentage > 0) {
           document.querySelector(DOMSelectors.percentageLabel).textContent = obj.percentage + '%';
@@ -275,8 +300,6 @@ var UIController = (function() {
         }
       });
     },
-
-    
 
     // Public 'getter' function (method)
     getDOMSelectors: function() {
