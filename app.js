@@ -181,7 +181,8 @@ var UIController = (function() {
     expensesLabel: '.budget__expenses--value',
     percentageLabel: '.budget__expenses--percentage',
     container: '.container',
-    expensesPercLabel: '.item__percentage'
+    expensesPercLabel: '.item__percentage',
+    dateLabel: '.budget__title--month'
   }
 
   var formatNumber = function(num, type) {
@@ -301,6 +302,19 @@ var UIController = (function() {
       });
     },
 
+    displayMonth: function() {
+      var now, month, months, year;
+      now = new Date();
+      // ES6 alternative to having to list all months in an array and use the month integer
+      // gotten from .getMonth() to access the month name at the corresponding index in the array.
+      month = now.toLocaleString('en-gb', {month: 'long'});
+      year = now.getFullYear();
+      document.querySelector(DOMSelectors.dateLabel).textContent = month + ' ' + year;
+
+      // One line solution
+      // document.querySelector(DOMSelectors.dateLabel).textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    },
+
     // Public 'getter' function (method)
     getDOMSelectors: function() {
       return DOMSelectors;
@@ -413,6 +427,7 @@ var controller = (function(budgetCtrl, UICtrl) {
   return {
     init: function() {
       console.log('Application has started');
+      UICtrl.displayMonth();
       UICtrl.displayBudget({
         budget: 0,
         totalInc: 0,
