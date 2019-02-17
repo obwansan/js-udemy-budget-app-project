@@ -202,6 +202,13 @@ var UIController = (function() {
     return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
   };
 
+  // Create a forEach function for node lists
+  var nodeListForEach = function(list, callback) {
+    for (var i = 0; i < list.length; i++) {
+      callback(list[i], i);
+    }
+  };
+
   // The budgetController function returns this object when the app loads/reloads because its an IIFE.
   // The return object contains public methods that can be accessed outside the controller. The functions,
   // varibles and objects that aren't returned are private (can't be accessed except by a getter function).
@@ -286,13 +293,6 @@ var UIController = (function() {
       // Returns a DOM node list (all DOM nodes / HTML elements with the class .item__percentage)
       var fields = document.querySelectorAll(DOMSelectors.expensesPercLabel);
 
-      // Create a forEach function for node lists
-      var nodeListForEach = function(list, callback) {
-        for (var i = 0; i < list.length; i++) {
-          callback(list[i], i);
-        }
-      };
-
       nodeListForEach(fields, function(current, index) {
         if (percentages[index] > 0) {
           current.textContent = percentages[index] + '%';
@@ -313,6 +313,26 @@ var UIController = (function() {
 
       // One line solution
       // document.querySelector(DOMSelectors.dateLabel).textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    },
+
+    changedType: function() {
+
+      // Returns a node list therefore can't use normal forEach
+      var fields = document.querySelectorAll(
+        DOMSelectors.inputType + ',' +
+        DOMSelectors.inputDescription + ',' +
+        DOMSelectors.inputValue
+      );
+
+      // So use the forEach we made earlier!
+      // Whenever the type is changed from expense to income or vica versa, if one 
+      // of the 3 fields has the call .red-focus, remove it, and if it doesn't, add it.
+      nodeListForEach(fields, function(cur) {
+        cur.classList.toggle('red-focus');
+      });
+
+      document.querySelector(DOMSelectors.inputBtn).classList.toggle('red');
+
     },
 
     // Public 'getter' function (method)
@@ -345,6 +365,8 @@ var controller = (function(budgetCtrl, UICtrl) {
     // an event listener on every income / expense div (maybe you can't anyway if they're 
     // generated dynamically?)
     document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+
+    document.querySelector(DOM.inputType).addEventListener('change', UICtrl.changedType);
   };
 
   var updateBuget = function() {
