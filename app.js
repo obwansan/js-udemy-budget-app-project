@@ -77,7 +77,8 @@ var budgetController = (function() {
         return newItem;
       },
 
-      // My version
+      // My version (access the object ID and index directly using forEach rather than using .map 
+      // to get the IDs and .indexOf to get the index)
       deleteItem: function(type, ID) {
         data.items[type].forEach(function(obj, index) {
           // If the ID of the budget item (DOM node / div) you are deleting is the 
